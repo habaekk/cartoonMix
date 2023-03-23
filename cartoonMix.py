@@ -1,9 +1,13 @@
+
 import cv2
 
-# Load the image
+# Load the original image
 img = cv2.imread("input_image.jpg")
 
-# Convert the image to grayscale
+# Resize the image to half its size
+img = cv2.resize(img, (img.shape[1]//8, img.shape[0]//8))
+
+## Convert the image to grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # Apply bilateral filter
@@ -12,31 +16,24 @@ bilateral = cv2.bilateralFilter(gray, 11, 17, 17)
 # Apply adaptive thresholding
 thresh = cv2.adaptiveThreshold(bilateral, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
 
-# Increase contrast
-equalized = cv2.equalizeHist(thresh)
+# Create cartoon-like effect using bitwise_and() function
+cartoon = cv2.bitwise_and(img, img, mask=thresh)
 
-# Convert to HSV color space
-hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-# Increase saturation and value channels
-hsv[:,:,1] += 50
-hsv[:,:,2] += 50
+# Apply the cartoon effect to the image
+# (insert the cartoonization code here)
 
-# Convert back to BGR color space
-colorized = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+# Resize the cartoon image to match the original image size
+cartoon = cv2.resize(cartoon, (img.shape[1], img.shape[0]))
 
-# Apply Canny edge detection
-edges = cv2.Canny(colorized, 100, 200)
+# Blend the cartoon image with the original image
+alpha = 0.4  # adjust the blending ratio as desired
+blend = cv2.addWeighted(cartoon, alpha, img, 1-alpha, 0)
 
-# Dilate edges to thicken them
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
-dilated = cv2.dilate(edges, kernel)
+# Concatenate the original and blended images horizontally
+side_by_side = cv2.hconcat([img, blend])
 
-# Combine cartoon and edges
-cartoon = cv2.bitwise_and(colorized, colorized, mask=thresh)
-final = cv2.bitwise_or(cartoon, cartoon, mask=dilated)
-
-# Display the output
-cv2.imshow("Anime Style", final)
+# Display the original and blended images side-by-side
+cv2.imshow("Original vs Processed Images", side_by_side)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
